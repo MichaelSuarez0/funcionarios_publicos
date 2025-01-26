@@ -10,6 +10,9 @@ import concurrent.futures
 import pandas as pd
 import os
 
+# ============================================================
+#  0. Configuraciones básicas
+# ============================================================
 script_dir = os.path.abspath(os.path.dirname(__file__))
 log_path = os.path.join(script_dir, 'funcionarios.log')
 
@@ -33,8 +36,13 @@ headers = {
 }
 
 
-# Crear decorador para medir el tiempo
+# ============================================================
+#  1. Definir funciones subordinadas
+# ============================================================
 def medir_tiempo(func: F) -> F:
+    """
+    Decorador para medir el tiempo de las funciones
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         inicio = timeit.default_timer()
@@ -65,10 +73,11 @@ def medir_tiempo(func: F) -> F:
     return wrapper
 
 
-# Definir funciones subordinadas
 def obtener_urls_funcionarios(paginas: int)-> list:
+    """
+    Obtener urls equivalentes al número de funcionarios especificado
+    """
     urls = []
-
     for pagina in range(1, paginas + 1):  # Recorre desde la página 1 hasta n_paginas
         url = f"https://www.gob.pe/funcionariospublicos?sheet={pagina}"
         response = requests.get(url, headers=headers)
@@ -93,7 +102,7 @@ def obtener_urls_funcionarios(paginas: int)-> list:
 # TODO: Formatear adecuadamente la fecha (en datetime)
 def obtener_datos_funcionario(url: str) -> dict:
     """
-    Extrae la información de un funcionario a partir de su URL usando XPath.
+    Extraer la información de un funcionario a partir de su URL usando XPath.
     """
     try:
         # Obtener el contenido HTML de la página
@@ -141,7 +150,9 @@ def guardar_en_excel(datos: list[dict], nombre_archivo: str = "funcionarios_publ
     logging.info(f"Datos guardados en {nombre_archivo}")
 
 
-# Definir función principal ----------------------------------------------
+# ============================================================
+#  2. Definir función principal
+# ============================================================
 @medir_tiempo
 def main_sync(paginas: int = 3) -> list[dict] :
     datos_funcionarios: list = [] # Lista de diccionarios final
@@ -155,6 +166,9 @@ def main_sync(paginas: int = 3) -> list[dict] :
     return datos_funcionarios
 
 
+# ============================================================
+#  3. Función principal optimizada con Threading
+# ============================================================
 @medir_tiempo
 def main_threads(paginas: int = 3, workers: int = 10) -> list[dict] :
     datos_funcionarios: list = [] # Lista de diccionarios final
@@ -177,9 +191,10 @@ def main_threads(paginas: int = 3, workers: int = 10) -> list[dict] :
     return datos_funcionarios
 
 
-# Ejemplo de uso
+# ============================================================
+#  4. Correr el script
+# ============================================================
 if __name__ == "__main__":
     #datos = main_sync()
     datos = main_threads(paginas=1879, workers=20)  # Máximo de páginas: 1879
-    guardar_en_excel(datos)
-    
+    guardar_en_excel(datos)  

@@ -1,0 +1,9 @@
+2025-01-25 23:14:12,383 - INFO - Se han obtenido datos de 400 funcionarios
+2025-01-25 23:14:12,383 - INFO - La función 'main_threads' tardó 0.00 minutos y 48.23 segundos en ejecutarse.
+2025-01-25 23:14:12,383 - INFO - Número de workers utilizados: 20
+2025-01-25 23:14:13,329 - INFO - Datos guardados en funcionarios.xlsx
+
+2025-01-26 00:35:26,957 - INFO - Se han obtenido datos de 37567 funcionarios
+2025-01-26 00:35:27,073 - INFO - La función 'main_threads' tardó 74.0 minutos y 32.10 segundos en ejecutarse.
+2025-01-26 00:35:27,073 - INFO - Número de workers utilizados: 20
+2025-01-26 00:35:35,261 - INFO - Datos guardados en funcionarios_publicos.xlsx
