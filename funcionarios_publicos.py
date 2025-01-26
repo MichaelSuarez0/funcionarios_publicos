@@ -7,8 +7,10 @@ from functools import wraps
 from typing import Callable, Any, TypeVar
 from lxml import html
 import concurrent.futures
+import threading
 import pandas as pd
 import os
+from tqdm import tqdm
 
 # ============================================================
 #  0. Configuraciones básicas
@@ -73,29 +75,31 @@ def medir_tiempo(func: F) -> F:
     return wrapper
 
 
-def obtener_urls_funcionarios(paginas: int)-> list:
+def obtener_urls_pagina(url_pagina: str)-> list:
     """
-    Obtener urls equivalentes al número de funcionarios especificado
+    Extraer las URLs de los funcionarios de una sola página.
     """
     urls = []
-    for pagina in range(1, paginas + 1):  # Recorre desde la página 1 hasta n_paginas
-        url = f"https://www.gob.pe/funcionariospublicos?sheet={pagina}"
-        response = requests.get(url, headers=headers)
-        
-        # Verificar si la solicitud fue exitosa
-        if response.status_code != 200:
-            logging.warning(f"Error al acceder a la página {pagina}. Código de estado: {response.status_code}")
-            continue
-        
-        soup = BeautifulSoup(response.content, "html.parser")
-        enlaces_funcionarios = soup.find_all("a", attrs={"class": "link-transition flex hover:no-underline justify-between items-center mt-8"})
-        
-        for enlace_funcionario in enlaces_funcionarios:
-            href = enlace_funcionario.get("href")
-            if href:
-                url_completa = base_url + href
-                urls.append(url_completa)
+    try:
+        response = requests.get(url_pagina, headers=headers)
+        response.raise_for_status()  # Raise an exception for bad status codes
+    except requests.RequestException as e:
+        logging.warning(f"Error al acceder a la página {url_pagina}: {e}")
+        return urls  # Return an empty list if the request fails
     
+    # Verificar si la solicitud fue exitosa
+    if response.status_code != 200:
+        logging.warning(f"Error al acceder a la página {url_pagina}. Código de estado: {response.status_code}")
+    
+    soup = BeautifulSoup(response.content, "html.parser")
+    enlaces_funcionarios = soup.find_all("a", attrs={"class": "link-transition flex hover:no-underline justify-between items-center mt-8"})
+    
+    for enlace_funcionario in enlaces_funcionarios:
+        href = enlace_funcionario.get("href")
+        if href:
+            url_completa = base_url + href
+            urls.append(url_completa)
+
     return urls
 
 
@@ -150,13 +154,13 @@ def guardar_en_excel(datos: list[dict], nombre_archivo: str = "funcionarios_publ
     logging.info(f"Datos guardados en {nombre_archivo}")
 
 
-# ============================================================
+# ================================================================
 #  2. Definir función principal
-# ============================================================
+# ================================================================
 @medir_tiempo
 def main_sync(paginas: int = 3) -> list[dict] :
     datos_funcionarios: list = [] # Lista de diccionarios final
-    urls_funcionarios: list = obtener_urls_funcionarios(paginas=paginas)  
+    urls_funcionarios: list = obtener_urls_pagina(paginas=paginas)  
 
     for url_funcionario in urls_funcionarios:
         dato_funcionario = obtener_datos_funcionario(url_funcionario)
@@ -166,35 +170,62 @@ def main_sync(paginas: int = 3) -> list[dict] :
     return datos_funcionarios
 
 
-# ============================================================
+# =================================================================
 #  3. Función principal optimizada con Threading
-# ============================================================
+# =================================================================
 @medir_tiempo
-def main_threads(paginas: int = 3, workers: int = 10) -> list[dict] :
-    datos_funcionarios: list = [] # Lista de diccionarios final
-    urls_funcionarios: list = obtener_urls_funcionarios(paginas=paginas)  
+def main_threads(paginas: int = 3, workers: int = 10) -> list[dict]:
+    datos_funcionarios: list[dict] = [] # Lista de diccionarios final
+    urls_funcionarios: list[str] = [] # Lista de urls de los funcionarios
+    lock = threading.Lock() # Lock to prevent race conditions when appending to list
 
-    # Usar ThreadPoolExecutor para paralelizar las solicitudes HTTP
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        # Mapear las URLs a futures
-        futures = []
-        for url in urls_funcionarios:
-            future = executor.submit(obtener_datos_funcionario, url)
-            futures.append(future)
+    # First progress bar
+    with tqdm(total = paginas, desc= "Fetching URLS", unit = "pages") as pbar_pages:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = []
+            for pagina in range(1, paginas + 1):  # Recorre desde la página 1 hasta n_paginas
+                url_pagina = f"https://www.gob.pe/funcionariospublicos?sheet={pagina}"
+                future = executor.submit(obtener_urls_pagina, url_pagina)
+                futures.append(future)
+            # Recolectar resultados a medida que se completa
+            for future in concurrent.futures.as_completed(futures):
+                lista_urls_pagina = future.result()
+                with lock:
+                    urls_funcionarios.extend(lista_urls_pagina)
+                pbar_pages.update(1)
+    
+    total_urls = len(urls_funcionarios) 
 
-        # Recolectar resultados a medida que se completan
-        for future in concurrent.futures.as_completed(futures):
-            dato_funcionario = future.result()
-            datos_funcionarios.append(dato_funcionario)
+    # Second progress bar
+    with tqdm(total = total_urls, desc= "Processing URLS", unit = "URLs") as pbar_data:
+        # Usar ThreadPoolExecutor para paralelizar las solicitudes HTTP
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            # Mapear las URLs a futures
+            futures = []
+            for url in urls_funcionarios:
+                future = executor.submit(obtener_datos_funcionario, url)
+                futures.append(future)
+
+            # Recolectar resultados a medida que se completan
+            for future in concurrent.futures.as_completed(futures):
+                dato_funcionario = future.result()
+                with lock:
+                    datos_funcionarios.append(dato_funcionario)
+                pbar_data.update(1)
 
     logging.info(f'Se han obtenido datos de {len(datos_funcionarios)} funcionarios')    
     return datos_funcionarios
 
 
-# ============================================================
+# =====================================================================
 #  4. Correr el script
-# ============================================================
+# =====================================================================
+#  Máximo de páginas: 1879
+#  Recomendado para probar: 200
+#  NOTA: No utilizar más de 10 workers para consistencia en el writing
+# =====================================================================
+
 if __name__ == "__main__":
     #datos = main_sync()
-    datos = main_threads(paginas=1879, workers=20)  # Máximo de páginas: 1879
+    datos = main_threads(paginas=200, workers=10) 
     guardar_en_excel(datos)  
