@@ -11,6 +11,7 @@ import threading
 import pandas as pd
 import os
 from tqdm import tqdm
+from datetime import datetime
 
 # ============================================================
 #  0. Configuraciones básicas
@@ -28,6 +29,8 @@ logging.basicConfig(
     ]
 )
 
+logging.info("=" * 90) 
+
 # Definir un tipo genérico para el retorno de la función
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -37,10 +40,29 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
-
 # ============================================================
 #  1. Definir funciones subordinadas
 # ============================================================
+
+def convertir_fecha(fecha_texto):
+    """Convierte una fecha en formato 'dd mmm yyyy' a datetime en formato estándar."""
+    meses = {
+        "ene": "Jan", "feb": "Feb", "mar": "Mar", "abr": "Apr",
+        "may": "May", "jun": "Jun", "jul": "Jul", "ago": "Aug",
+        "set": "Sep", "sep": "Sep", "oct": "Oct", "nov": "Nov", "dic": "Dec"
+    }
+    # Reemplazar el nombre del mes en español por su equivalente en inglés
+    for mes_es, mes_en in meses.items():
+        if mes_es in fecha_texto:
+            fecha_texto = fecha_texto.replace(mes_es, mes_en)
+            break
+
+    try:
+        return datetime.strptime(fecha_texto, "%d %b %Y").strftime("%Y-%m-%d")
+    except ValueError:
+        return None 
+
+
 def medir_tiempo(func: F) -> F:
     """
     Decorador para medir el tiempo de las funciones
@@ -103,7 +125,7 @@ def obtener_urls_pagina(url_pagina: str)-> list:
     return urls
 
 
-# TODO: Formatear adecuadamente la fecha (en datetime)
+
 def obtener_datos_funcionario(url: str) -> dict:
     """
     Extraer la información de un funcionario a partir de su URL usando XPath.
@@ -118,11 +140,11 @@ def obtener_datos_funcionario(url: str) -> dict:
 
         # XPaths para extraer la información
         xpaths = {
-            "institucion": '//h1[contains(@class, "text-base")]//a/text()',
-            "nombre": '//h2[@class="md:text-4xl mt-3"]/text()',
-            "cargo": '//div[@class="mt-4"]/text()',
+            "nombre": '//h1[@class="text-2xl leading-8"]/text()',
+            "institucion": '//h2[contains(@class, "text-base")]//a/text()',
+            "cargo": '//h1/following-sibling::div[@class="mt-2"][1]/text()',
             "fecha_inicio": '//span[@class="ml-1"]/text()',
-            "correo": '//a[contains(@class, "track-ga-click")]//span/text()',
+            "correo": '//span[contains(text(), "@")]/text()',
             "telefono": '//a[contains(@class, "icon-text") and starts-with(@href, "tel:")]/text()',
             "resolucion": '//div[contains(@class, "mt-3 font-bold")]//div/text()[normalize-space()]',
             "resumen": '//div[@id="biography-showhide"]//text()',
@@ -132,8 +154,10 @@ def obtener_datos_funcionario(url: str) -> dict:
         for clave, xpath in xpaths.items():
             resultado: list = tree.xpath(xpath)
             if resultado:
-                if clave in ["correo", "telefono"]:
+                if clave == "telefono":
                     datos[clave] = resultado[0].strip()
+                elif clave == "fecha_inicio":
+                    datos[clave] = convertir_fecha(resultado[0].strip())  # Convertir fecha
                 else:
                     datos[clave] = " ".join(resultado).strip()
             else:
@@ -147,9 +171,13 @@ def obtener_datos_funcionario(url: str) -> dict:
     
 
 # TODO: Formatear adecuadamente el excel exportado
-def guardar_en_excel(datos: list[dict], nombre_archivo: str = "funcionarios_publicos.xlsx"):
+def guardar_en_excel(datos: list[dict]):
+    date = datetime.now()
+    date_formatted = date.strftime("%Y%m%d")
     df = pd.DataFrame(datos)
+    nombre_archivo = f"funcionarios_publicos_{date_formatted}.xlsx"
     ruta = os.path.join(script_dir, nombre_archivo)
+
     df.to_excel(ruta, index=False, engine="openpyxl")
     logging.info(f"Datos guardados en {nombre_archivo}")
 
@@ -157,6 +185,7 @@ def guardar_en_excel(datos: list[dict], nombre_archivo: str = "funcionarios_publ
 # ================================================================
 #  2. Definir función principal
 # ================================================================
+# TODO: Adaptar para el nuevo obtener_urls_pagina
 @medir_tiempo
 def main_sync(paginas: int = 3) -> list[dict] :
     datos_funcionarios: list = [] # Lista de diccionarios final
@@ -174,7 +203,7 @@ def main_sync(paginas: int = 3) -> list[dict] :
 #  3. Función principal optimizada con Threading
 # =================================================================
 @medir_tiempo
-def main_threads(paginas: int = 3, workers: int = 10) -> list[dict]:
+def main_threads(paginas: int, workers: int = 9) -> list[dict]:
     datos_funcionarios: list[dict] = [] # Lista de diccionarios final
     urls_funcionarios: list[str] = [] # Lista de urls de los funcionarios
     lock = threading.Lock() # Lock to prevent race conditions when appending to list
@@ -220,12 +249,12 @@ def main_threads(paginas: int = 3, workers: int = 10) -> list[dict]:
 # =====================================================================
 #  4. Correr el script
 # =====================================================================
-#  Máximo de páginas: 1879
-#  Recomendado para probar: 200
+#  Máximo de páginas aproximado: 1912 (~2h)
+#  Recomendado de páginas para probar: 40 (~2min)
 #  NOTA: No utilizar más de 10 workers para consistencia en el writing
 # =====================================================================
 
 if __name__ == "__main__":
     #datos = main_sync()
-    datos = main_threads(paginas=200, workers=10) 
+    datos = main_threads(paginas=1912, workers=9) 
     guardar_en_excel(datos)  
