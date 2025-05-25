@@ -1,7 +1,6 @@
 import logging
 from bs4 import BeautifulSoup
 import requests
-from icecream import ic
 import timeit
 from functools import wraps
 from typing import Callable, Any, TypeVar
@@ -9,27 +8,26 @@ from lxml import html
 import concurrent.futures
 import threading
 import pandas as pd
-import os
+from pathlib import Path
 from tqdm import tqdm
 from datetime import datetime
 
 # ============================================================
 #  0. Configuraciones básicas
 # ============================================================
-script_dir = os.path.abspath(os.path.dirname(__file__))
-log_path = os.path.join(script_dir, 'funcionarios.log')
+SCRIPT_DIR = Path(__file__).parent
+LOG_PATH = SCRIPT_DIR / 'log' / 'directorio_funcionarios.log'
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # Configuración básica del logging
 logging.basicConfig(
     level=logging.INFO,  # Nivel de registro (INFO, DEBUG, WARNING, ERROR, CRITICAL)
     format='%(asctime)s - %(levelname)s - %(message)s',  
     handlers=[
-    logging.FileHandler(log_path, mode='a', encoding='utf-8'),  # Archivo en UTF-8
+    logging.FileHandler(LOG_PATH, mode='a', encoding='utf-8'),  # Archivo en UTF-8
     logging.StreamHandler()  # También mostrar logs en la consola
     ]
 )
-
-logging.info("=" * 90) 
 
 # Definir un tipo genérico para el retorno de la función
 F = TypeVar("F", bound=Callable[..., Any])
@@ -44,7 +42,7 @@ headers = {
 #  1. Definir funciones subordinadas
 # ============================================================
 
-def convertir_fecha(fecha_texto):
+def convertir_fecha(fecha_texto: str):
     """Convierte una fecha en formato 'dd mmm yyyy' a datetime en formato estándar."""
     meses = {
         "ene": "Jan", "feb": "Feb", "mar": "Mar", "abr": "Apr",
@@ -125,7 +123,6 @@ def obtener_urls_pagina(url_pagina: str)-> list:
     return urls
 
 
-
 def obtener_datos_funcionario(url: str) -> dict:
     """
     Extraer la información de un funcionario a partir de su URL usando XPath.
@@ -176,7 +173,7 @@ def guardar_en_excel(datos: list[dict]):
     date_formatted = date.strftime("%Y%m%d")
     df = pd.DataFrame(datos)
     nombre_archivo = f"funcionarios_publicos_{date_formatted}.xlsx"
-    ruta = os.path.join(script_dir, nombre_archivo)
+    ruta = SCRIPT_DIR, "funcionarios", nombre_archivo
 
     df.to_excel(ruta, index=False, engine="openpyxl")
     logging.info(f"Datos guardados en {nombre_archivo}")
@@ -203,13 +200,23 @@ def main_sync(paginas: int = 3) -> list[dict] :
 #  3. Función principal optimizada con Threading
 # =================================================================
 @medir_tiempo
-def main_threads(paginas: int, workers: int = 9) -> list[dict]:
+def main_threads(paginas: int | None = None, workers: int = 9) -> list[dict]:
     datos_funcionarios: list[dict] = [] # Lista de diccionarios final
     urls_funcionarios: list[str] = [] # Lista de urls de los funcionarios
     lock = threading.Lock() # Lock to prevent race conditions when appending to list
 
+    logging.info("=" * 90) 
+
+    if not paginas:
+        url_inicial = "https://www.gob.pe/funcionariospublicos"
+        initial_page = requests.get(url_inicial, headers=headers)
+        soup = BeautifulSoup(initial_page.content, "html.parser")
+        paginas = int(soup.find("span", attrs={"class": "last"}).get_text())
+    
+    logging.info(f"Se obtendrán datos de aproximadamente {paginas*20} funcionarios")
+
     # First progress bar
-    with tqdm(total = paginas, desc= "Fetching URLS", unit = "pages") as pbar_pages:
+    with tqdm(total = paginas, desc= "Obteniendo URLS", unit = "pages") as pbar_pages:
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for pagina in range(1, paginas + 1):  # Recorre desde la página 1 hasta n_paginas
@@ -226,7 +233,7 @@ def main_threads(paginas: int, workers: int = 9) -> list[dict]:
     total_urls = len(urls_funcionarios) 
 
     # Second progress bar
-    with tqdm(total = total_urls, desc= "Processing URLS", unit = "URLs") as pbar_data:
+    with tqdm(total = total_urls, desc= "Obteniendo funcionarios", unit = "URLs") as pbar_data:
         # Usar ThreadPoolExecutor para paralelizar las solicitudes HTTP
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             # Mapear las URLs a futures
@@ -249,12 +256,12 @@ def main_threads(paginas: int, workers: int = 9) -> list[dict]:
 # =====================================================================
 #  4. Correr el script
 # =====================================================================
-#  Máximo de páginas aproximado: 1912 (~2h)
-#  Recomendado de páginas para probar: 40 (~2min)
-#  NOTA: No utilizar más de 10 workers para consistencia en el writing
+#  Tiempo estimado para 1940 paginas, 9 workers: ~88 min
+#  Número de páginas recomendado para probar: 40 (~2min)
+#  NOTA: No utilizar más de 10 workers para evitar data races
 # =====================================================================
 
+# TODO: encontrar número de páginas dinámicamente
 if __name__ == "__main__":
-    #datos = main_sync()
-    datos = main_threads(paginas=1912, workers=9) 
-    guardar_en_excel(datos)  
+    datos = main_threads(workers=9) 
+    guardar_en_excel(datos)
