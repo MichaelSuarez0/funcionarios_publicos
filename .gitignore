@@ -159,3 +159,5 @@ cython_debug/
 #.idea/
 
 *.log
+*.log
+funcionarios.log
