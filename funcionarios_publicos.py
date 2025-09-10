@@ -173,7 +173,7 @@ def guardar_en_excel(datos: list[dict]):
     date_formatted = date.strftime("%Y%m%d")
     df = pd.DataFrame(datos)
     nombre_archivo = f"funcionarios_publicos_{date_formatted}.xlsx"
-    ruta = SCRIPT_DIR, "funcionarios", nombre_archivo
+    ruta = SCRIPT_DIR / "funcionarios" / nombre_archivo
 
     df.to_excel(ruta, index=False, engine="openpyxl")
     logging.info(f"Datos guardados en {nombre_archivo}")
