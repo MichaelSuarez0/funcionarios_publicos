@@ -2,22 +2,42 @@
 import scrapy
 from scrapy.spiders import Spider
 from scrapy.core.scraper import Response
+from dataclasses import dataclass
 
+@dataclass(frozen=True)
+class FuncionarioXPaths:
+    nombre: str = '//h1[@class="text-2xl leading-8"]/text()'
+    institucion: str = '//h2[contains(@class, "text-base")]//a/text()'
+    cargo: str = '//h1/following-sibling::div[@class="mt-2"][1]/text()'
+    fecha_inicio: str = '//span[@class="ml-1"]/text()'
+    correo: str = '//span[contains(text(), "@")]/text()'
+    telefono: str = '//a[@aria-label[contains(.,"Llamar al número")]]/text()'
+    #telefono: str = '//a[contains(@class, "icon-text") and starts-with(@href, "tel:")]/text()'
+    resolucion: str = '//div[contains(@class, "mt-3 font-bold")]//div/text()[normalize-space()]'
+    resumen: str = '//div[@id="biography-showhide"]//text()'
 
 class URLSpider(Spider):
-    name = "headings"
+    name = "directorio"
     allowed_domains = ["gob.pe"]
-    start_urls = ["https://www.gob.pe/funcionariospublicos?sheet=1"]
+    start_urls = [
+        "https://www.gob.pe/funcionariospublicos",
+        "https://www.gob.pe/funcionariospublicos?sheet=1",
+    ]
+
+    xpaths = FuncionarioXPaths()
+
     total_links = 0
     total_pages = 0
 
     def parse(self, response: Response):
         # Extraer número aproximado de funcionarios según el número de páginas
         self.total_pages = response.css('a[aria-label*="Última página"]::text').get()
-        self.total_funcionarios = int(self.total_pages)*40
-        
+        self.total_funcionarios = int(self.total_pages) * 40
+
         # Extraer todos los URLs de los funcionarios
-        links = response.css("a.link-transition.flex.hover\\:no-underline.justify-between.items-center.mt-8::attr(href)").getall()
+        links = response.css(
+            "a.link-transition.flex.hover\\:no-underline.justify-between.items-center.mt-8::attr(href)"
+        ).getall()
         page_links = 0
 
         for href in links:
@@ -37,6 +57,14 @@ class URLSpider(Spider):
         url = response.url
         self.total_links += 1
         self.logger.info(f"{self.total_links}/{self.total_funcionarios} -> {url}")
-        yield {"url": url}
-
-        
+        yield {
+            "url": url,
+            "nombre": response.xpath(self.xpaths.nombre).get(),
+            "institucion": response.xpath(self.xpaths.institucion).get(),
+            "cargo": response.xpath(self.xpaths.cargo).get(),
+            "fecha_inicio": response.xpath(self.xpaths.fecha_inicio).get(),
+            "correo": response.xpath(self.xpaths.correo).get(),
+            "telefono": response.xpath(self.xpaths.telefono).get(),
+            "resolucion": response.xpath(self.xpaths.resolucion).get(),
+            "resumen": response.xpath(self.xpaths.resumen).get(),
+        }

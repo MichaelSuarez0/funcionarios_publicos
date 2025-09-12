@@ -1,11 +1,11 @@
-BOT_NAME = "funcionarios_ppublicos"
+BOT_NAME = "funcionarios_publicos"
 #LOG_LEVEL = "INFO"
 
 ROBOTSTXT_OBEY = False
 # USER_AGENT = "vigilancia_prospectiva (+https://example.org/contact)"
 
 # Concurrencia
-CONCURRENT_REQUESTS = 40
+CONCURRENT_REQUESTS = 45
 CONCURRENT_REQUESTS_PER_DOMAIN = 10
 DOWNLOAD_DELAY = 0.0
 
@@ -30,18 +30,18 @@ DOWNLOAD_TIMEOUT = 10
 HTTPCACHE_ENABLED = True
 HTTPCACHE_EXPIRATION_SECS = 86400
 
-# Pipelines (opcional si grabas a DB)
-# ITEM_PIPELINES = {
-#     "vigilancia_prospectiva.scrapy.pipelines.NormalizePipeline": 100,
-# }
 
 FEEDS = {
-    "salida.json": {
-        "format": "json",
+    "salida.csv": {
+        "format": "csv",
         "encoding": "utf8",
-        "indent": 4,
+        "delimiter": ";",
         "overwrite": True,
     }
+}
+
+FEED_EXPORTERS = {
+    "csv": "scrapy_cfg.exporters.SemiColonCsvItemExporter",
 }
 
 TWISTED_REACTOR = "twisted.internet.iocpreactor.reactor.IOCPReactor"

@@ -5,7 +5,7 @@ from .url_spider import URLSpider
 from . import settings as pkg_settings
 
 
-def scrapear_urls(output_path: str | Path = "salida.jsonl"):
+def scrapear_urls(output_path: str | Path = "salida.csv", concurrent_requests: int = 50):
     """
     Ejecuta la spider HeadingsSpider para extraer contenido de URLs y guarda los resultados.
     
@@ -86,14 +86,15 @@ def scrapear_urls(output_path: str | Path = "salida.jsonl"):
         "FEEDS",
         {
             str(output_path): {
-                "format": "jsonlines",
+                "format": "csv",
                 "encoding": "utf-8",
-                "indent": 4,
                 "overwrite": True,
+                "delimiter": ";"
             }
         },
         priority="project",
     )
+    s.set("CONCURRENT_REQUESTS", concurrent_requests)
 
     process = CrawlerProcess(settings=s)
     process.crawl(URLSpider)
