@@ -30,18 +30,12 @@ DOWNLOAD_TIMEOUT = 10
 HTTPCACHE_ENABLED = True
 HTTPCACHE_EXPIRATION_SECS = 86400
 
-
-FEEDS = {
-    "salida.csv": {
-        "format": "csv",
-        "encoding": "utf8",
-        "delimiter": ";",
-        "overwrite": True,
-    }
+ITEM_PIPELINES = {
+    "_pipelines.FechaPipeline" : 300
 }
 
 FEED_EXPORTERS = {
-    "csv": "scrapy_cfg.exporters.SemiColonCsvItemExporter",
+    "csv": "_exporters.SemiColonCsvItemExporter",
 }
 
 TWISTED_REACTOR = "twisted.internet.iocpreactor.reactor.IOCPReactor"

@@ -1,6 +1,4 @@
-# src/vigilancia_prospectiva/spiders/headings_spider.py
 import scrapy
-from scrapy.spiders import Spider
 from scrapy.core.scraper import Response
 from dataclasses import dataclass
 
@@ -14,9 +12,10 @@ class FuncionarioXPaths:
     telefono: str = '//a[@aria-label[contains(.,"Llamar al número")]]/text()'
     #telefono: str = '//a[contains(@class, "icon-text") and starts-with(@href, "tel:")]/text()'
     resolucion: str = '//div[contains(@class, "mt-3 font-bold")]//div/text()[normalize-space()]'
-    resumen: str = '//div[@id="biography-showhide"]//text()'
+    #resumen: str = '//div[@id="biography-showhide"]//text()'
+    resumen: str = '//div[@class="leading-6"]//text()'
 
-class URLSpider(Spider):
+class FuncionariosSpider(scrapy.Spider):
     name = "directorio"
     allowed_domains = ["gob.pe"]
     start_urls = [
@@ -47,7 +46,10 @@ class URLSpider(Spider):
 
         # Si encontramos funcionarios en esta página, probamos la siguiente
         if page_links > 0:
-            current_sheet = int(response.url.split("sheet=")[-1])
+            try:
+                current_sheet = int(response.url.split("sheet=")[-1])
+            except ValueError:
+                return
             next_sheet = current_sheet + 1
             next_url = f"https://www.gob.pe/funcionariospublicos?sheet={next_sheet}"
             self.logger.info(f"➡️  Siguiente página: {next_sheet}")
@@ -57,8 +59,14 @@ class URLSpider(Spider):
         url = response.url
         self.total_links += 1
         self.logger.info(f"{self.total_links}/{self.total_funcionarios} -> {url}")
+
+        resumen = response.xpath('//div[@class="leading-6"]//text()').getall()
+        # Limpiar espacios, saltos y \xa0
+        resumen_limpio = " ".join(
+            [t.strip().replace("\xa0", " ") for t in resumen if t.strip()]
+        )
+
         yield {
-            "url": url,
             "nombre": response.xpath(self.xpaths.nombre).get(),
             "institucion": response.xpath(self.xpaths.institucion).get(),
             "cargo": response.xpath(self.xpaths.cargo).get(),
@@ -66,5 +74,6 @@ class URLSpider(Spider):
             "correo": response.xpath(self.xpaths.correo).get(),
             "telefono": response.xpath(self.xpaths.telefono).get(),
             "resolucion": response.xpath(self.xpaths.resolucion).get(),
-            "resumen": response.xpath(self.xpaths.resumen).get(),
+            "url": url,
+            "resumen": resumen_limpio
         }
