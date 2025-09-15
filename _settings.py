@@ -1,13 +1,13 @@
 BOT_NAME = "funcionarios_publicos"
-#LOG_LEVEL = "INFO"
+LOG_ENABLED = True
+LOG_LEVEL = "INFO"
 
 ROBOTSTXT_OBEY = False
-# USER_AGENT = "vigilancia_prospectiva (+https://example.org/contact)"
 
 # Concurrencia
-CONCURRENT_REQUESTS = 45
-CONCURRENT_REQUESTS_PER_DOMAIN = 10
-DOWNLOAD_DELAY = 0.0
+# CONCURRENT_REQUESTS = 50
+# CONCURRENT_REQUESTS_PER_DOMAIN = 25
+# DOWNLOAD_DELAY = 0.0
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -23,8 +23,8 @@ AUTOTHROTTLE_ENABLED = False
 
 # Retries / timeouts
 RETRY_ENABLED = True
-RETRY_TIMES = 1
-DOWNLOAD_TIMEOUT = 10
+RETRY_TIMES = 2
+DOWNLOAD_TIMEOUT = 15
 
 # Cache HTTP (desarrollo)
 HTTPCACHE_ENABLED = True

@@ -1,11 +1,12 @@
 from pathlib import Path
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+from _utils import medir_tiempo
 from _funcionarios_spider import FuncionariosSpider
 import _settings as pkg_settings
 
-
-def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int = 50):
+@medir_tiempo
+def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int = 40):
     """
     Ejecuta la spider `FuncionariosPublicos` y guarda los items exportados en un archivo CSV
     en la ruta señalada en output_path.
@@ -15,7 +16,7 @@ def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int
     output_path : str or pathlib.Path, default "salida.csv"
         Ruta del archivo de salida. Se exporta en formato **CSV** con codificación UTF-8 y
         delimitador `;`. Si el archivo existe, se sobreescribe.
-    concurrent_requests : int, default 50
+    concurrent_requests : int, default 40
         Número máximo de solicitudes concurrentes que usará Scrapy (`CONCURRENT_REQUESTS`).
         Valores altos aceleran el scraping pero pueden incrementar timeouts/ban y carga del sitio.
 
@@ -26,7 +27,7 @@ def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int
 
     Examples
     --------
-    Ejecutar con la configuración por defecto (50 requests concurrentes) y salida en `salida.csv`:
+    Ejecutar con la configuración por defecto (40 requests concurrentes) y salida en `salida.csv`:
 
     >>> main_scrapy()
 
@@ -46,9 +47,9 @@ def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int
         if k.isupper():
             s.set(k, v, priority="project")
     
-    # Configuración del log (por defecto en INFO)
-    s.set("LOG_ENABLED", True, priority="project")
-    s.set("LOG_LEVEL", "INFO", priority="project")  # opciones: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    # # Configuración del log (por defecto en INFO)
+    # s.set("LOG_ENABLED", True, priority="project")
+    # s.set("LOG_LEVEL", "INFO", priority="project")  # opciones: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
     # FEEDS para exportar sin pipeline de DB
     s.set(
@@ -64,6 +65,7 @@ def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int
         priority="project",
     )
     s.set("CONCURRENT_REQUESTS", concurrent_requests)
+    s.set("CONCURRENT_REQUESTS_PER_DOMAIN", concurrent_requests)
 
     process = CrawlerProcess(settings=s)
     process.crawl(FuncionariosSpider)

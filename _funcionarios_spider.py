@@ -10,9 +10,7 @@ class FuncionarioXPaths:
     fecha_inicio: str = '//span[@class="ml-1"]/text()'
     correo: str = '//span[contains(text(), "@")]/text()'
     telefono: str = '//a[@aria-label[contains(.,"Llamar al número")]]/text()'
-    #telefono: str = '//a[contains(@class, "icon-text") and starts-with(@href, "tel:")]/text()'
     resolucion: str = '//div[contains(@class, "mt-3 font-bold")]//div/text()[normalize-space()]'
-    #resumen: str = '//div[@id="biography-showhide"]//text()'
     resumen: str = '//div[@class="leading-6"]//text()'
 
 class FuncionariosSpider(scrapy.Spider):
@@ -31,7 +29,7 @@ class FuncionariosSpider(scrapy.Spider):
     def parse(self, response: Response):
         # Extraer número aproximado de funcionarios según el número de páginas
         self.total_pages = response.css('a[aria-label*="Última página"]::text').get()
-        self.total_funcionarios = int(self.total_pages) * 40
+        self.total_funcionarios = int(self.total_pages) * 20
 
         # Extraer todos los URLs de los funcionarios
         links = response.css(
