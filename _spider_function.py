@@ -1,9 +1,12 @@
 from pathlib import Path
+
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-from _utils import medir_tiempo
-from _funcionarios_spider import FuncionariosSpider
+
 import _settings as pkg_settings
+from _funcionarios_spider import FuncionariosSpider
+from _utils import medir_tiempo
+
 
 @medir_tiempo
 def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int = 40):
@@ -46,7 +49,7 @@ def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int
     for k, v in pkg_settings.__dict__.items():
         if k.isupper():
             s.set(k, v, priority="project")
-    
+
     # # Configuración del log (por defecto en INFO)
     # s.set("LOG_ENABLED", True, priority="project")
     # s.set("LOG_LEVEL", "INFO", priority="project")  # opciones: DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -59,7 +62,7 @@ def main_scrapy(output_path: str | Path = "salida.csv", concurrent_requests: int
                 "format": "csv",
                 "encoding": "utf-8-sig",
                 "overwrite": True,
-                "delimiter": ";"
+                "delimiter": ";",
             }
         },
         priority="project",
