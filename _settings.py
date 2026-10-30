@@ -27,15 +27,13 @@ RETRY_TIMES = 2
 DOWNLOAD_TIMEOUT = 15
 
 # Cache HTTP (desarrollo)
-HTTPCACHE_ENABLED = True
+HTTPCACHE_ENABLED = False
 HTTPCACHE_EXPIRATION_SECS = 86400
 
-ITEM_PIPELINES = {
-    "_pipelines.FechaPipeline" : 300
-}
+ITEM_PIPELINES = {"_pipelines.FechaPipeline": 300}
 
 FEED_EXPORTERS = {
     "csv": "_exporters.SemiColonCsvItemExporter",
 }
 
-TWISTED_REACTOR = "twisted.internet.iocpreactor.reactor.IOCPReactor"
+TWISTED_REACTOR = "twisted.internet.selectreactor.SelectReactor"

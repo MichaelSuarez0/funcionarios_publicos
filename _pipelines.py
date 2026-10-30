@@ -1,11 +1,22 @@
 from datetime import datetime
 
+
 def convertir_fecha(fecha_texto: str):
     """Convierte una fecha en formato 'dd mmm yyyy' a datetime en formato estándar."""
     meses = {
-        "ene": "Jan", "feb": "Feb", "mar": "Mar", "abr": "Apr",
-        "may": "May", "jun": "Jun", "jul": "Jul", "ago": "Aug",
-        "set": "Sep", "sep": "Sep", "oct": "Oct", "nov": "Nov", "dic": "Dec"
+        "ene": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "abr": "Apr",
+        "may": "May",
+        "jun": "Jun",
+        "jul": "Jul",
+        "ago": "Aug",
+        "set": "Sep",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dic": "Dec",
     }
     # Reemplazar el nombre del mes en español por su equivalente en inglés
     for mes_es, mes_en in meses.items():
@@ -16,7 +27,7 @@ def convertir_fecha(fecha_texto: str):
     try:
         return datetime.strptime(fecha_texto, "%d %b %Y").strftime("%Y-%m-%d")
     except ValueError:
-        return None 
+        return None
 
 
 class FechaPipeline:
@@ -27,6 +38,6 @@ class FechaPipeline:
                 item[k] = v.strip()
 
         # Convertir a fecha
-        if "fecha_inicio" in item and item["fecha_inicio"]:
+        if item.get("fecha_inicio"):
             item["fecha_inicio"] = convertir_fecha(item["fecha_inicio"])
         return item
