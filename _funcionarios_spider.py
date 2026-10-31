@@ -38,7 +38,7 @@ class FuncionariosSpider(scrapy.Spider):
         return b"Verification Required" in cuerpo or b"too frequent" in cuerpo
 
     def _reanudar(self):
-        self.logger.info("▶Reanudando crawl")
+        self.logger.info("▶ Reanudando crawl")
         self._pausado = False
         self.crawler.engine.unpause()
 
@@ -98,7 +98,9 @@ class FuncionariosSpider(scrapy.Spider):
             yield response.follow(href, callback=self.parse_item)
 
     def parse_item(self, response: Response):
-        if self.bloqueado(response):
+        nombre = response.xpath(self.xpaths.nombre).get()
+
+        if self.bloqueado(response) or not nombre:
             r = self.reintentar(response)
             if r:
                 yield r
