@@ -3,9 +3,9 @@ from pathlib import Path
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
-import _settings as pkg_settings
-from _funcionarios_spider import FuncionariosSpider
-from _utils import medir_tiempo
+import funcionario_publicos.core.settings as pkg_settings
+from funcionario_publicos.core.funcionarios_spider import FuncionariosSpider
+from funcionario_publicos.core.utils import medir_tiempo
 
 
 @medir_tiempo
