@@ -162,4 +162,4 @@ cython_debug/
 *.log
 funcionarios.log
 *.xlsx
-*.csv
+funcionarios/

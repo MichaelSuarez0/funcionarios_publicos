@@ -8,7 +8,7 @@ if __name__ == "__main__":
     date_formatted = date.strftime("%Y%m%d")
     output_path = (
         Path(__file__).parent
-        / "funcionarios"
+        / "data"
         / f"funcionarios_publicos_{date_formatted}.csv"
     )
 
