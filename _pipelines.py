@@ -31,7 +31,7 @@ def convertir_fecha(fecha_texto: str):
 
 
 class FechaPipeline:
-    def process_item(self, item, spider):
+    def process_item(self, item):
         # Quitar espacios en blanco
         for k, v in item.items():
             if isinstance(v, str):
