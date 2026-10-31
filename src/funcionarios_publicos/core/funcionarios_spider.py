@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 import scrapy
 from scrapy.http import Response
-from twisted.internet import reactor
 
 
 @dataclass(frozen=True)
@@ -43,6 +42,7 @@ class FuncionariosSpider(scrapy.Spider):
         self.crawler.engine.unpause()
 
     def reintentar(self, response: Response):
+        from twisted.internet import reactor  # import tardío
         req = response.request
         n = req.meta.get("block_retries", 0) + 1
         if n > self.MAX_RETRIES:
