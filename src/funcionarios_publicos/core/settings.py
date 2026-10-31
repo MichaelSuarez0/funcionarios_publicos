@@ -30,10 +30,10 @@ DOWNLOAD_TIMEOUT = 15
 HTTPCACHE_ENABLED = False
 HTTPCACHE_EXPIRATION_SECS = 86400
 
-ITEM_PIPELINES = {"_pipelines.FechaPipeline": 300}
+ITEM_PIPELINES = {"funcionarios_publicos.core.pipelines.FechaPipeline": 300}
 
 FEED_EXPORTERS = {
-    "csv": "_exporters.SemiColonCsvItemExporter",
+    "csv": "funcionarios_publicos.core.exporters.SemiColonCsvItemExporter",
 }
 
 TWISTED_REACTOR = "twisted.internet.selectreactor.SelectReactor"
