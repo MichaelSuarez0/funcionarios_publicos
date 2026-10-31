@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from funcionario_publicos.high_level.spider_function import main_scrapy
+from funcionarios_publicos.high_level.spider_function import main_scrapy
 
 if __name__ == "__main__":
     date = datetime.now()
