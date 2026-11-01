@@ -2,6 +2,12 @@
 
 ### ⚙️ Miscellaneous Tasks
 
+- Corrige typo en cliff.toml - ([3b71be4](https://github.com/MichaelSuarez0/funcionarios_publicos/commit/3b71be47c965355d276493396cfe0dac75b4b474))
+
+## [0.2.1] - 2026-11-01
+
+### ⚙️ Miscellaneous Tasks
+
 - Corrije workflow de lanzamiento - ([69d2112](https://github.com/MichaelSuarez0/funcionarios_publicos /commit/69d21126fd008d8f265c7631295c3063db385ebf))
 
 ## [0.2.0] - 2026-11-01
