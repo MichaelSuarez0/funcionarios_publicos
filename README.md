@@ -13,20 +13,31 @@
 
 ## 🚀 Sobre el Proyecto
 
-Este proyecto es un scraper desarrollado en **Python** y **Scrapy** para extraer de forma automatizada y estructurada la información de más de 40,000 funcionarios públicos del Perú, completando el proceso en aproximadamente **dos horas**.
+Este proyecto es un scraper desarrollado en **Python** y **Scrapy** para extraer de forma automatizada y estructurada la información de más de 40,000 funcionarios públicos del Perú, completando el proceso en **~2 horas**.
 
 Además, cuenta con una automatización en **GitHub Actions** configurada para ejecutarse **todos los domingos**, guardando un nuevo archivo CSV con su respectiva fecha en cada corrida, para preservar un registro histórico de los datos a lo largo del tiempo.
 
+## 🛢️ ¿Buscas solo los datos?
 
-## ⚙️ Requisitos Previos
+**¡No necesitas ejecutar el scraper!** Puedes acceder directamente a la carpeta [**`data`**](./data), donde encontrarás los datasets limpios en formato **CSV** (delimitados por punto y coma `;`), ordenados y fechados por cada ejecución automática para facilitar tus análisis, investigaciones o auditorías.
+
+## 🛠️ Stack Tecnológico
+
+- **Lenguaje:** [Python 3.11+](https://www.python.org/)
+- **Web Scraping:** [Scrapy](https://scrapy.org/)
+- **Gestión de Entorno y Paquetes:** [uv](https://github.com/astral-sh/uv)
+- **Automatización:** [GitHub Actions](https://github.com/features/actions)
+
+## 💻 Ejecución Local (para desarrolladores)
+
+Si deseas ejecutar el scraper por tu cuenta en lugar de usar los datos pregenerados, sigue estos pasos:
+
+### ⚙️ Requisitos Previos
 
 Asegúrate de tener instalado [uv](https://github.com/astral-sh/uv) en tu sistema:
 - **Python** >= 3.11
 
-
-## 📥 Instalación y Uso
-
-Sigue estos pasos para clonar el repositorio y ejecutar el scraper localmente:
+### 📥 Instalación y Uso
 
 1. **Clonar el repositorio:**
    ```bash
@@ -43,10 +54,3 @@ Sigue estos pasos para clonar el repositorio y ejecutar el scraper localmente:
    ```bash
    uv run main.py
    ```
-
-## 🛠️ Stack Tecnológico
-
-- **Lenguaje:** [Python 3.11+](https://www.python.org/)
-- **Web Scraping:** [Scrapy](https://scrapy.org/)
-- **Gestión de Entorno y Paquetes:** [uv](https://github.com/astral-sh/uv)
-- **Automatización:** [GitHub Actions](https://github.com/features/actions)
