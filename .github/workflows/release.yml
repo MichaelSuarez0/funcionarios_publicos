@@ -30,15 +30,12 @@ jobs:
       - name: Get changelog
         id: changelog
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || echo "")
-          if [ -n "$PREV_TAG" ]; then
-            git-cliff --config cliff.toml "$PREV_TAG..${GITHUB_REF_NAME}" > /tmp/changelog.md
-          else
-            git-cliff --config cliff.toml "${GITHUB_REF_NAME}" > /tmp/changelog.md
-          fi
-          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-          cat /tmp/changelog.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+            git-cliff --config cliff.toml --current --strip header > /tmp/changelog.md
+            {
+                echo "CHANGELOG<<EOF"
+                cat /tmp/changelog.md
+                echo "EOF"
+            } >> $GITHUB_OUTPUT
 
       - name: Create release
         uses: softprops/action-gh-release@v2
