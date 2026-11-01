@@ -22,7 +22,7 @@ body = """
         - {% if commit.scope %}**({{ commit.scope }})** {% endif %}\
             {% if commit.breaking %}[**breaking**] {% endif %}\
             {{ commit.message | upper_first }} - \
-            ([{{ commit.id | truncate(length=7, end="") }}](<REPO_URL>/commit/{{ commit.id }}))\
+            ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/MichaelSuarez0/funcionarios_publicos /commit/{{ commit.id }}))\
     {% endfor %}
 {% endfor %}
 
