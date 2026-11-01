@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏛️ Peru Public Officials Scraper (`funcionarios_publicos`)
+# 🏛️ Scraper de Funcionarios Públicos del Perú
 
 *Extractor automatizado de alto rendimiento para extraer datos de más de **40,000 funcionarios públicos peruanos** del [Directorio Nacional de Funcionarios Públicos](https://www.gob.pe/funcionariospublicos)*
 
